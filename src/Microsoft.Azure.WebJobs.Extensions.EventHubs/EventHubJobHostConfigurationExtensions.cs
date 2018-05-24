@@ -2,10 +2,11 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
+using Microsoft.Azure.WebJobs.EventHubs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Config;
 
-namespace Microsoft.Azure.WebJobs.ServiceBus
+namespace Microsoft.Azure.WebJobs
 {
     /// <summary>
     /// Extension for registering an event hub configuration with the JobHostConfiguration.

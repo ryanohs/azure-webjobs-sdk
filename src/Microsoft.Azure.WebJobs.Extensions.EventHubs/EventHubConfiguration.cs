@@ -15,7 +15,7 @@ using Microsoft.Azure.WebJobs.Logging;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.Azure.WebJobs.ServiceBus
+namespace Microsoft.Azure.WebJobs.EventHubs
 {
     /// <summary>
     /// Provide configuration for event hubs. 
