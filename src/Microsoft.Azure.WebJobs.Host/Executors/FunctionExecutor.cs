@@ -91,7 +91,7 @@ namespace Microsoft.Azure.WebJobs.Host.Executors
 
                     exceptionInfo = ExceptionDispatchInfo.Capture(exception);
 
-                    exceptionInfo = await InvokeExceptionFiltersAsync(parameterHelper.JobInstance, exceptionInfo, functionInstance, parameterHelper.FilterContextProperties, logger, cancellationToken);
+                    exceptionInfo = await InvokeExceptionFiltersAsync(parameterHelper.JobInstance, exceptionInfo, functionInstance, parameterHelper.FilterContextProperties, logger, cancellationToken, parameterHelper.SetReturnValue);
                 }
 
                 if (functionCompletedMessage != null)
@@ -135,12 +135,12 @@ namespace Microsoft.Azure.WebJobs.Host.Executors
         }
 
         private async Task<ExceptionDispatchInfo> InvokeExceptionFiltersAsync(object jobInstance, ExceptionDispatchInfo exceptionDispatchInfo, IFunctionInstance functionInstance,
-            IDictionary<string, object> properties, ILogger logger, CancellationToken cancellationToken)
+            IDictionary<string, object> properties, ILogger logger, CancellationToken cancellationToken, Action<object> setReturnValue)
         {
             var exceptionFilters = GetFilters<IFunctionExceptionFilter>(_globalFunctionFilters, functionInstance.FunctionDescriptor, jobInstance);
             if (exceptionFilters.Any())
             {
-                var exceptionContext = new FunctionExceptionContext(functionInstance.Id, functionInstance.FunctionDescriptor.ShortName, logger, exceptionDispatchInfo, properties);
+                var exceptionContext = new FunctionExceptionContext(functionInstance.Id, functionInstance.FunctionDescriptor.ShortName, logger, exceptionDispatchInfo, properties, setReturnValue);
                 Exception exception = exceptionDispatchInfo.SourceException;
                 foreach (var exceptionFilter in exceptionFilters)
                 {
@@ -531,7 +531,10 @@ namespace Microsoft.Azure.WebJobs.Host.Executors
 
             object returnValue = await invokeTask;
 
-            parameterHelper.SetReturnValue(returnValue);
+            if (parameterHelper.ReturnValue != null)
+            {
+                parameterHelper.SetReturnValue(returnValue);
+            }
         }
 
         /// <summary>
@@ -1108,7 +1111,7 @@ namespace Microsoft.Azure.WebJobs.Host.Executors
 
                 Exception exception = null;
                 var properties = _parameterHelper.FilterContextProperties;
-                FunctionExecutingContext executingContext = new FunctionExecutingContext(_parameterHelper.GetParametersAsDictionary(), properties, _functionInstance.Id, _functionInstance.FunctionDescriptor.ShortName, _logger);
+                FunctionExecutingContext executingContext = new FunctionExecutingContext(_parameterHelper.GetParametersAsDictionary(), properties, _functionInstance.Id, _functionInstance.FunctionDescriptor.ShortName, _logger, _parameterHelper.SetReturnValue);
                 try
                 {
                     for (int i = 0; i < len; i++)
@@ -1118,6 +1121,16 @@ namespace Microsoft.Azure.WebJobs.Host.Executors
                         await filter.OnExecutingAsync(executingContext, cancellationToken);
 
                         highestSuccessfulFilter = i;
+
+                        if (_parameterHelper.ReturnValue != null)
+                        {
+                            break;
+                        }
+                    }
+
+                    if (_parameterHelper.ReturnValue != null)
+                    {
+                        return Task.FromResult(_parameterHelper.ReturnValue);
                     }
 
                     var result = await _innerInvoker.InvokeAsync(instance, arguments);
@@ -1133,7 +1146,7 @@ namespace Microsoft.Azure.WebJobs.Host.Executors
                     var functionResult = exception != null ?
                         new FunctionResult(exception)
                         : new FunctionResult(true);
-                    FunctionExecutedContext executedContext = new FunctionExecutedContext(_parameterHelper.GetParametersAsDictionary(), properties, _functionInstance.Id, _functionInstance.FunctionDescriptor.ShortName, _logger, functionResult);
+                    FunctionExecutedContext executedContext = new FunctionExecutedContext(_parameterHelper.GetParametersAsDictionary(), properties, _functionInstance.Id, _functionInstance.FunctionDescriptor.ShortName, _logger, functionResult, _parameterHelper.SetReturnValue);
 
                     // Run post filters in reverse order. 
                     // Only run the post if the corresponding pre executed successfully. 

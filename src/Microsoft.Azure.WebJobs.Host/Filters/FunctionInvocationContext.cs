@@ -20,8 +20,8 @@ namespace Microsoft.Azure.WebJobs.Host
         /// <param name="functionInstanceId">The instance ID for the function invocation.</param>
         /// <param name="functionName">The name of the function.</param>
         /// <param name="logger"><see cref="ILogger"/> that can be used by the filter to log information.</param>
-        protected FunctionInvocationContext(IReadOnlyDictionary<string, object> arguments, IDictionary<string, object> properties, Guid functionInstanceId, string functionName, ILogger logger)
-            : base(functionInstanceId, functionName, logger, properties)
+        protected FunctionInvocationContext(IReadOnlyDictionary<string, object> arguments, IDictionary<string, object> properties, Guid functionInstanceId, string functionName, ILogger logger, Action<object> setReturnValue)
+            : base(functionInstanceId, functionName, logger, properties, setReturnValue)
         {
             if (arguments == null)
             {

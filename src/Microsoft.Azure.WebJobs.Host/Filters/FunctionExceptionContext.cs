@@ -21,8 +21,11 @@ namespace Microsoft.Azure.WebJobs.Host
         /// <param name="logger"><see cref="ILogger"/> that can be used by the filter to log information.</param>
         /// <param name="exceptionDispatchInfo">The <see cref="ExceptionDispatchInfo"/> for the exception.</param>
         /// <param name="properties">The property bag that can be used to pass information between filters.</param>
-        public FunctionExceptionContext(Guid functionInstanceId, string functionName, ILogger logger, ExceptionDispatchInfo exceptionDispatchInfo, IDictionary<string, object> properties)
-            : base(functionInstanceId, functionName, logger, properties)
+        /// <param name="setReturnValue"></param>
+        public FunctionExceptionContext(Guid functionInstanceId, string functionName, ILogger logger,
+            ExceptionDispatchInfo exceptionDispatchInfo, IDictionary<string, object> properties,
+            Action<object> setReturnValue)
+            : base(functionInstanceId, functionName, logger, properties, setReturnValue)
         {
             if (exceptionDispatchInfo == null)
             {
